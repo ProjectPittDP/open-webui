@@ -291,7 +291,7 @@ else:
 # CUSTOM_NAME
 ####################################
 
-CUSTOM_NAME = os.environ.get("CUSTOM_NAME", "")
+CUSTOM_NAME = os.environ.get("CUSTOM_NAME", "Deb WebUI")
 
 if CUSTOM_NAME:
     try:
