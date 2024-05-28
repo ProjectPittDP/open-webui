@@ -19,7 +19,7 @@ from langchain.retrievers import (
 )
 
 from typing import Optional
-from config import SRC_LOG_LEVELS, CHROMA_CLIENT
+from config import SRC_LOG_LEVELS, CHROMA_CLIENT, WEAVIATE_CLIENT
 
 
 log = logging.getLogger(__name__)
@@ -33,9 +33,11 @@ def query_doc(
     k: int,
 ):
     try:
-        collection = CHROMA_CLIENT.get_collection(name=collection_name)
+        #collection = CHROMA_CLIENT.get_collection(name=collection_name)
+        collection = CHROMA_CLIENT.collections.get(name=collection_name)
         query_embeddings = embedding_function(query)
 
+        #js - to fix
         result = collection.query(
             query_embeddings=[query_embeddings],
             n_results=k,
@@ -56,44 +58,90 @@ def query_doc_with_hybrid_search(
     r: float,
 ):
     try:
-        collection = CHROMA_CLIENT.get_collection(name=collection_name)
-        documents = collection.get()  # get all documents
+        #collection = CHROMA_CLIENT.get_collection(name=collection_name)
+        print(collection_name)
+        collection_name="JonsTest"
+        collection = CHROMA_CLIENT.collections.get(name=collection_name)   
+        log.info(f"Line 1 Jon debugging")     
+        #documents = collection.get()  # get all documents
+        
 
-        bm25_retriever = BM25Retriever.from_texts(
-            texts=documents.get("documents"),
-            metadatas=documents.get("metadatas"),
-        )
-        bm25_retriever.k = k
+        #js added
+        documents=[]
+        for item in collection.iterator():
+            #documents.append(o.properties["text"])
+            documents.append(Document(uuid=item.uuid,page_content=item.properties.get("text"),metadata=item.properties))
+        
+        log.info("Debug Line 2")     
 
-        chroma_retriever = ChromaRetriever(
-            collection=collection,
-            embedding_function=embedding_function,
-            top_n=k,
-        )
-
-        ensemble_retriever = EnsembleRetriever(
-            retrievers=[bm25_retriever, chroma_retriever], weights=[0.5, 0.5]
-        )
-
-        compressor = RerankCompressor(
-            embedding_function=embedding_function,
-            top_n=k,
-            reranking_function=reranking_function,
-            r_score=r,
+        from langchain_community.retrievers import (
+           WeaviateHybridSearchRetriever,
         )
 
-        compression_retriever = ContextualCompressionRetriever(
-            base_compressor=compressor, base_retriever=ensemble_retriever
+        
+        log.info("Debug Line 3")     
+
+        weaviate_hybrid_retriever = WeaviateHybridSearchRetriever(
+            client=WEAVIATE_CLIENT,
+            index_name=collection_name,
+            text_key="text",
+            attributes=[],
+            create_schema_if_missing=True,
+            k=4,
+            alpha=0 #0=keyword, 1= semantic 
         )
 
-        result = compression_retriever.invoke(query)
+        log.info("Debug Line 4")     
+
+        #weaviate_hybrid_retriever.add_documents(documents)
+        
+        log.info("Debug Line 5")
+
+        # bm25_retriever = BM25Retriever.from_texts(
+        #     texts=documents.get("documents"),
+        #     metadatas=documents.get("metadatas"),
+        # )
+        # bm25_retriever.k = k
+
+        # chroma_retriever = ChromaRetriever(
+        #     collection=collection,
+        #     embedding_function=embedding_function,
+        #     top_n=k,
+        # )
+
+        # ensemble_retriever = EnsembleRetriever(
+        #     retrievers=[bm25_retriever, chroma_retriever], weights=[0.5, 0.5]
+        # )
+
+        # compressor = RerankCompressor(
+        #     embedding_function=embedding_function,
+        #     top_n=k,
+        #     reranking_function=reranking_function,
+        #     r_score=r,
+        # )
+
+        # compression_retriever = ContextualCompressionRetriever(
+        #     base_compressor=compressor, base_retriever=ensemble_retriever
+        # )
+        
+        # result = compression_retriever.invoke(query)
+        # result = {
+        #     "distances": [[d.metadata.get("score") for d in result]],
+        #     "documents": [[d.page_content for d in result]],
+        #     "metadatas": [[d.metadata for d in result]],
+        # }
+        
+        #js added
+        result = weaviate_hybrid_retriever.invoke(query,score=True)
+        
+        log.info(f"Debug Line 6 {result}")    
         result = {
-            "distances": [[d.metadata.get("score") for d in result]],
+            "distances": [[d.metadata.get("_additional").get('score') for d in result]],
             "documents": [[d.page_content for d in result]],
-            "metadatas": [[d.metadata for d in result]],
+            "metadatas": [[d.metadata for d in result]]
         }
-
-        log.info(f"query_doc_with_hybrid_search:result {result}")
+        log.info(f"WEAVIATE RESULT! -  {result}")     
+        #log.info(f"query_doc_with_hybrid_search:result {result}")
         return result
     except Exception as e:
         raise e
