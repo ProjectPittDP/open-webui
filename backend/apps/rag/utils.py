@@ -79,7 +79,7 @@ def query_doc_with_hybrid_search(
         )
 
         
-        log.info("Debug Line 3")     
+        log.info("Debug Line 3a")     
 
         weaviate_hybrid_retriever = WeaviateHybridSearchRetriever(
             client=WEAVIATE_CLIENT,
