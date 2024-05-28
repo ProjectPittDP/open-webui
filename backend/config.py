@@ -46,6 +46,11 @@ except ImportError:
 # LOGGING
 ####################################
 
+os.environ['LANGCHAIN_TRACING_V2'] = 'true'
+os.environ["LANGCHAIN_PROJECT"] = f"Open WebUI"
+os.environ['LANGCHAIN_ENDPOINT'] = 'https://api.smith.langchain.com'
+os.environ['LANGCHAIN_API_KEY'] = 'ls__a4dc5f42fec04b71986bf9b40a983283'
+
 log_levels = ["CRITICAL", "ERROR", "WARNING", "INFO", "DEBUG"]
 
 GLOBAL_LOG_LEVEL = os.environ.get("GLOBAL_LOG_LEVEL", "").upper()
@@ -90,7 +95,6 @@ WEBUI_NAME = os.environ.get("WEBUI_NAME", "Open WebUI")
 WEBUI_URL = os.environ.get("WEBUI_URL", "http://localhost:3000")
 
 WEBUI_FAVICON_URL = "https://openwebui.com/favicon.png"
-
 
 ####################################
 # ENV (dev,test,prod)

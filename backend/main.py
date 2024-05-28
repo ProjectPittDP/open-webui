@@ -67,7 +67,6 @@ logging.basicConfig(stream=sys.stdout, level=GLOBAL_LOG_LEVEL)
 log = logging.getLogger(__name__)
 log.setLevel(SRC_LOG_LEVELS["MAIN"])
 
-
 class SPAStaticFiles(StaticFiles):
     async def get_response(self, path: str, scope):
         try:
