@@ -21,7 +21,6 @@ from langchain.retrievers import (
 from typing import Optional
 from config import SRC_LOG_LEVELS, CHROMA_CLIENT
 
-
 log = logging.getLogger(__name__)
 log.setLevel(SRC_LOG_LEVELS["RAG"])
 
