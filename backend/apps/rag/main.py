@@ -90,6 +90,7 @@ from config import (
     RAG_OPENAI_API_KEY,
     DEVICE_TYPE,
     CHROMA_CLIENT,
+    WEAVIATE_CLIENT,
     CHUNK_SIZE,
     CHUNK_OVERLAP,
     RAG_TEMPLATE,
@@ -194,7 +195,7 @@ app.add_middleware(
 
 
 class CollectionNameForm(BaseModel):
-    collection_name: Optional[str] = "test"
+    collection_name: Optional[str] = "JonsTest"
 
 
 class UrlForm(CollectionNameForm):
@@ -650,20 +651,24 @@ def store_text_in_vector_db(
 
 
 def store_docs_in_vector_db(docs, collection_name, overwrite: bool = False) -> bool:
-    log.info(f"store_docs_in_vector_db {docs} {collection_name}")
-
+    #log.info(f"store_docs_in_vector_db {docs} {collection_name}")
+    log.info(f"store_docs_in_vector_db {collection_name}")
     texts = [doc.page_content for doc in docs]
     metadatas = [doc.metadata for doc in docs]
 
     try:
-        if overwrite:
-            for collection in CHROMA_CLIENT.list_collections():
-                if collection_name == collection.name:
-                    log.info(f"deleting existing collection {collection_name}")
-                    CHROMA_CLIENT.delete_collection(name=collection_name)
+        #if overwrite:
+            # for collection in CHROMA_CLIENT.list_collections():
+            #     if collection_name == collection.name:
+            #         log.info(f"deleting existing collection {collection_name}")
+            #         CHROMA_CLIENT.delete_collection(name=collection_name)
+            # for collection in CHROMA_CLIENT.collections.list_all():
+            #     if collection_name == collection.name:
+            #         log.info(f"deleting existing collection {collection_name}")
+            #         CHROMA_CLIENT.collections.delete(name=collection_name)
 
-        collection = CHROMA_CLIENT.create_collection(name=collection_name)
-
+        #collection = CHROMA_CLIENT.collections.create(name=collection_name)
+        
         embedding_func = get_embedding_function(
             app.state.config.RAG_EMBEDDING_ENGINE,
             app.state.config.RAG_EMBEDDING_MODEL,
@@ -674,15 +679,32 @@ def store_docs_in_vector_db(docs, collection_name, overwrite: bool = False) -> b
 
         embedding_texts = list(map(lambda x: x.replace("\n", " "), texts))
         embeddings = embedding_func(embedding_texts)
+        
+        from langchain_community.vectorstores.weaviate import Weaviate
+        import weaviate
+        from langchain_community.embeddings.ollama import OllamaEmbeddings
 
-        for batch in create_batches(
-            api=CHROMA_CLIENT,
-            ids=[str(uuid.uuid4()) for _ in texts],
-            metadatas=metadatas,
-            embeddings=embeddings,
-            documents=texts,
-        ):
-            collection.add(*batch)
+        client = weaviate.Client("http://localhost:8081")            
+        collection_name="JonsTest"
+        weav = Weaviate.from_documents(
+            documents=docs,             
+            embedding=OllamaEmbeddings(model='nomic-embed-text'),
+            client=WEAVIATE_CLIENT,
+            #prefer_grpc=True, 
+            index_name=collection_name
+        )
+        
+        # for batch in create_batches(            
+        #     api=CHROMA_CLIENT,
+        #     ids=[str(uuid.uuid4()) for _ in texts],
+        #     metadatas=metadatas,
+        #     embeddings=embeddings,
+        #     documents=texts,
+
+        # ):
+        #     collection.add(*batch)
+
+        
 
         return True
     except Exception as e:
@@ -936,7 +958,7 @@ def scan_docs_dir(user=Depends(get_admin_user)):
 
 @app.get("/reset/db")
 def reset_vector_db(user=Depends(get_admin_user)):
-    CHROMA_CLIENT.reset()
+    CHROMA_CLIENT.collections.delete_all()
 
 
 @app.get("/reset")
@@ -953,7 +975,7 @@ def reset(user=Depends(get_admin_user)) -> bool:
             log.error("Failed to delete %s. Reason: %s" % (file_path, e))
 
     try:
-        CHROMA_CLIENT.reset()
+        CHROMA_CLIENT.collections.delete_all()
     except Exception as e:
         log.exception(e)
 

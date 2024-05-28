@@ -3,6 +3,11 @@ import sys
 import logging
 import chromadb
 from chromadb import Settings
+from weaviate import WeaviateClient
+from langchain_community.vectorstores.weaviate import Weaviate
+from langchain_weaviate import WeaviateVectorStore
+import weaviate
+
 from base64 import b64encode
 from bs4 import BeautifulSoup
 from typing import TypeVar, Generic, Union
@@ -17,6 +22,13 @@ import shutil
 
 from secrets import token_bytes
 from constants import ERROR_MESSAGES
+
+import os
+from langsmith import traceable
+
+os.environ["LANGCHAIN_TRACING_V2"] = "true"
+os.environ["LANGCHAIN_API_KEY"] = "ls__0a4028d0b8844641b9c9416a1b026eb7"
+
 
 ####################################
 # Load .env file
@@ -663,12 +675,20 @@ if CHROMA_HTTP_HOST != "":
         settings=Settings(allow_reset=True, anonymized_telemetry=False),
     )
 else:
-    CHROMA_CLIENT = chromadb.PersistentClient(
-        path=CHROMA_DATA_PATH,
-        settings=Settings(allow_reset=True, anonymized_telemetry=False),
-        tenant=CHROMA_TENANT,
-        database=CHROMA_DATABASE,
-    )
+    WEAVIATE_CLIENT = weaviate.Client("http://localhost:8081")
+    #client = weaviate.connect_to_local("localhost","8081")#v4
+
+    #CHROMA_CLIENT = weaviate.Client("http://localhost:8081")    
+    CHROMA_CLIENT = weaviate.connect_to_local("localhost","8081")#v4    
+
+    # CHROMA_CLIENT = chromadb.PersistentClient(
+    #     path=CHROMA_DATA_PATH,
+    #     settings=Settings(allow_reset=True, anonymized_telemetry=False),
+    #     tenant=CHROMA_TENANT,
+    #     database=CHROMA_DATABASE,
+    # )    
+
+    
 
 
 # device type embedding models - "cpu" (default), "cuda" (nvidia gpu required) or "mps" (apple silicon) - choosing this right can lead to better performance
