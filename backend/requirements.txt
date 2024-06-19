@@ -59,3 +59,6 @@ black==24.4.2
 langfuse==2.27.3
 youtube-transcript-api==0.6.2
 pytube
+
+weaviate-client
+langchain_weaviate

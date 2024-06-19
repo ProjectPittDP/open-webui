@@ -26,10 +26,6 @@ from constants import ERROR_MESSAGES
 import os
 from langsmith import traceable
 
-os.environ["LANGCHAIN_TRACING_V2"] = "true"
-os.environ["LANGCHAIN_API_KEY"] = "ls__0a4028d0b8844641b9c9416a1b026eb7"
-
-
 ####################################
 # Load .env file
 ####################################
@@ -675,11 +671,11 @@ if CHROMA_HTTP_HOST != "":
         settings=Settings(allow_reset=True, anonymized_telemetry=False),
     )
 else:
-    WEAVIATE_CLIENT = weaviate.Client("http://localhost:8081")
+    WEAVIATE_CLIENT = weaviate.Client("http://host.docker.internal:8080")
     #client = weaviate.connect_to_local("localhost","8081")#v4
 
-    #CHROMA_CLIENT = weaviate.Client("http://localhost:8081")    
-    CHROMA_CLIENT = weaviate.connect_to_local("localhost","8081")#v4    
+    CHROMA_CLIENT = weaviate.Client("http://host.docker.internal:8080")    
+    #CHROMA_CLIENT = weaviate.connect_to_local()#v4    
 
     # CHROMA_CLIENT = chromadb.PersistentClient(
     #     path=CHROMA_DATA_PATH,
@@ -687,9 +683,6 @@ else:
     #     tenant=CHROMA_TENANT,
     #     database=CHROMA_DATABASE,
     # )    
-
-    
-
 
 # device type embedding models - "cpu" (default), "cuda" (nvidia gpu required) or "mps" (apple silicon) - choosing this right can lead to better performance
 USE_CUDA = os.environ.get("USE_CUDA_DOCKER", "false")

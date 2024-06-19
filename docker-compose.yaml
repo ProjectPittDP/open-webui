@@ -21,7 +21,7 @@ services:
     # depends_on:
     #   - ollama
     ports:
-      - ${OPEN_WEBUI_PORT-3000}:8080
+      - ${OPEN_WEBUI_PORT-3000}:8081
     # develop:
     #   watch:
     #     - action: sync
