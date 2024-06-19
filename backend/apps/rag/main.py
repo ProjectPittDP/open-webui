@@ -909,7 +909,7 @@ def store_docs_in_vector_db(docs, collection_name, overwrite: bool = False) -> b
         import weaviate
         from langchain_community.embeddings.ollama import OllamaEmbeddings
 
-        client = weaviate.Client("http://localhost:8081")            
+        client = weaviate.Client("http://localhost:8080")            
         collection_name="JonsTest"
         weav = Weaviate.from_documents(
             documents=docs,             

@@ -744,7 +744,7 @@ if CHROMA_HTTP_HOST != "":
     )
 else:
     WEAVIATE_CLIENT = weaviate.Client("http://host.docker.internal:8080")
-    #client = weaviate.connect_to_local("localhost","8081")#v4
+    #client = weaviate.connect_to_local("localhost","8080")#v4
 
     CHROMA_CLIENT = weaviate.Client("http://host.docker.internal:8080")    
     #CHROMA_CLIENT = weaviate.connect_to_local()#v4    

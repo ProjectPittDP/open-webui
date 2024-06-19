@@ -43,7 +43,7 @@ ARG GID
 
 ## Basis ##
 ENV ENV=prod \
-    PORT=8081 \
+    PORT=8080 \
     # pass build args to the build
     USE_OLLAMA_DOCKER=${USE_OLLAMA} \
     USE_CUDA_DOCKER=${USE_CUDA} \
@@ -147,9 +147,9 @@ COPY --chown=$UID:$GID --from=build /app/package.json /app/package.json
 # copy backend files
 COPY --chown=$UID:$GID ./backend .
 
-EXPOSE 8081
+EXPOSE 80
 
-HEALTHCHECK CMD curl --silent --fail http://localhost:8081/health | jq -e '.status == true' || exit 1
+HEALTHCHECK CMD curl --silent --fail http://localhost:80/health | jq -e '.status == true' || exit 1
 
 USER $UID:$GID
 
